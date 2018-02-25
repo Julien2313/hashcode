@@ -31,7 +31,7 @@ func (p *pizza) decode(b []byte) {
 		s.Scan()
 		row := s.Bytes()
 		for x, c := range row {
-			p.Cells[point{x, y}] = &Cell{c, nil, make([]*slice, 0, 10)}
+			p.Cells[point{x, y}] = &Cell{c, nil, make([][]*slice, p.H)}
 		}
 	}
 
@@ -53,7 +53,7 @@ func (p *pizza) write() {
 	output := p.encode()
 	err := ioutil.WriteFile("output/"+fileName+".out", []byte(output), 0644)
 	if err != nil {
-		return
+		panic(err)
 	}
 }
 
