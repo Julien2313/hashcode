@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 func (p *pizza) read() {
@@ -26,7 +28,13 @@ func (p *pizza) decode(b []byte) {
 	p.C = args[1]
 	p.L = args[2]
 	p.H = args[3]
-
+	log.WithFields(logrus.Fields{
+		"function": "decode",
+		"R":        p.R,
+		"C":        p.C,
+		"L":        p.L,
+		"H":        p.H,
+	}).Info("Slices dans la pizza")
 	for y := 0; y < p.R; y++ {
 		s.Scan()
 		row := s.Bytes()
@@ -68,18 +76,4 @@ func toSliceOfInt(line string) []int {
 		}
 	}
 	return rep
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
