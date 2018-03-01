@@ -57,16 +57,6 @@ func (p *UberGoogle) decode(b []byte) {
 			"f":           args[5],
 		}).Debug("ride parameter")
 
-		ride := p.rides[i]
-		longueurRide := abs(ride.a-ride.x) + abs(ride.b-ride.y)
-		bonus := 0
-		if max(ride.a+ride.b, ride.s) == ride.s {
-			bonus = p.B
-		}
-		if longueurRide+max(ride.a+ride.b, ride.s) < ride.f {
-			p.rides[i].scoreN[0] = float64(longueurRide+bonus) / float64(1+max(ride.a+ride.b, ride.s))
-		}
-
 		//for j := 0; j < p.N; j++ {
 		//	if j != i {
 		//		p.rides[i].nextRides = append(p.rides[i].nextRides, &decisionRide{

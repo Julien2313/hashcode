@@ -39,20 +39,37 @@ func (p *UberGoogle) moveAllCarsAtStep(step int) {
 		if len(p.rides) == 0 {
 			return
 		}
-
 		for i, ride := range p.rides {
-			//ride.scoreN[1] = ride.scoreN[0]
+
+			if ride.s > step+abs(ride.a-car.x)+abs(ride.b-car.y)+1000 {
+				break
+			}
+			longueurRide := abs(ride.a-ride.x) + abs(ride.b-ride.y)
 			bonus := 0
-			timeToReachStart := abs(ride.a-car.x) + abs(ride.b-car.y)
-			if max(timeToReachStart, ride.s) == ride.s {
+			if max(ride.a+ride.b, ride.s) == ride.s {
 				bonus = p.B
 			}
-
-			longueurRide := abs(ride.a-ride.x) + abs(ride.b-ride.y)
-
-			if longueurRide+max(timeToReachStart, ride.s) < ride.f {
-				p.rides[i].scoreN[1] = float64(longueurRide+bonus) / float64(1+max(timeToReachStart, ride.s))
+			if longueurRide+max(ride.a+ride.b, ride.s) < ride.f {
+				p.rides[i].scoreN[0] = float64(longueurRide+bonus) / float64(1+max(ride.a+ride.b, ride.s))
+			} else {
+				continue
 			}
+			p.rides[i].scoreN[1] = 0
+			for _, ride1 := range p.rides {
+				//ride1.scoreN[1] = ride1.scoreN[0]
+				bonus := 0
+				timeToReachStart := abs(ride1.a-car.x) + abs(ride1.b-car.y)
+				if max(timeToReachStart, ride1.s) == ride1.s {
+					bonus = p.B
+				}
+
+				longueurRide := abs(ride1.a-ride1.x) + abs(ride1.b-ride1.y)
+
+				if longueurRide+max(timeToReachStart, ride1.s) < ride1.f {
+					p.rides[i].scoreN[1] += float64(longueurRide+bonus) / float64(1+max(timeToReachStart, ride1.s))
+				}
+			}
+			p.rides[i].scoreN[1] = p.rides[i].scoreN[1]/float64(len(p.rides)) + p.rides[i].scoreN[0]
 		}
 
 		// prendre le ride le plus avantageux

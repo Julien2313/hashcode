@@ -6,8 +6,8 @@ const (
 	//fileName = "a_example"
 	//fileName = "b_should_be_easy"
 	//fileName = "c_no_hurry"
-	//fileName = "d_metropolis"
-	fileName = "e_high_bonus"
+	fileName = "d_metropolis"
+	//fileName = "e_high_bonus"
 
 	logLevel = logrus.WarnLevel // DebugLevel, InfoLevel, WarnLevel
 )
