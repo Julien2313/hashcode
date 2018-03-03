@@ -1,6 +1,6 @@
 package main
 
-const fileName = "medium"
+const fileName = "example"
 
 func main() {
 	myPizza := &pizza{

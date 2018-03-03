@@ -1,13 +1,15 @@
 package main
 
-import "github.com/sirupsen/logrus"
+import (
+	"fmt"
+	"os"
+)
 
 // Get all prime factors of a given number n
 func PrimeFactors(n int) (pfs []int) {
 	if n == 0 {
-		log.WithFields(logrus.Fields{
-			"function": "PrimeFactors",
-		}).Fatal("n equals zero")
+		fmt.Println("n equals zero")
+		os.Exit(1)
 	}
 	// Get the number of 2s that divide n
 	for n%2 == 0 {

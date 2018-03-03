@@ -6,82 +6,44 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
-
-	"github.com/sirupsen/logrus"
+	"fmt"
 )
 
-func (p *UberGoogle) read() {
-	b, err := ioutil.ReadFile("input/" + fileName + ".in")
+const PATH = "E:/Julien/Documents/GitHub/hashcode/2018/Qualification/"
+
+func (p *UBERGOOGLE) read() {
+	b, err := ioutil.ReadFile(PATH + "input/" + fileName + ".in")
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"function": "read",
-			"fileName": fileName + ".in",
-		}).Panic(err)
+		panic(err)
 	}
 	p.decode(b)
 }
 
-func (p *UberGoogle) decode(b []byte) {
+func (p *UBERGOOGLE) decode(b []byte) {
 	tmp := bytes.NewReader(b)
 	s := bufio.NewScanner(tmp)
 	s.Scan()
 
-	log.WithFields(logrus.Fields{
-		"line": s.Text(),
-	}).Debug("parsing line")
 	args := toSliceOfInt(s.Text())
 	p.R, p.C, p.F, p.N, p.B, p.T = args[0], args[1], args[2], args[3], args[4], args[5]
+	fmt.Println(p)
+	p.rides = make([]*RIDE, p.N)
 
-	log.WithFields(logrus.Fields{
-		"R": p.R,
-		"C": p.C,
-		"F": p.F,
-		"N": p.N,
-		"B": p.B,
-		"T": p.T,
-	}).Info("Global parameters")
-	for i := 0; i < p.N; i++ {
+	for numRide := 0; numRide < p.N; numRide++ {
 		s.Scan()
-		log.WithFields(logrus.Fields{
-			"line": s.Text(),
-		}).Debug("parsing line")
 		args := toSliceOfInt(s.Text())
-		p.rides[i] = &ride{i, args[0], args[1], args[2], args[3], args[4], args[5], make([]float64, 2)} //make([]*decisionRide, 0, p.N-1)
-		log.WithFields(logrus.Fields{
-			"ride number": i,
-			"a":           args[0],
-			"b":           args[1],
-			"x":           args[2],
-			"y":           args[3],
-			"s":           args[4],
-			"f":           args[5],
-		}).Debug("ride parameter")
-
-		//for j := 0; j < p.N; j++ {
-		//	if j != i {
-		//		p.rides[i].nextRides = append(p.rides[i].nextRides, &decisionRide{
-		//			ride: p.rides[j],
-		//			//otherRides: make([]*ride, 0, 10),
-		//		})
-		//	}
-		//}
+		p.rides[numRide] = &RIDE{numRide, args[0], args[1], args[2], args[3], args[4], args[5], 0.0, 0}
 	}
 
-	// create slices & maps
-	p.myCars = make(map[int][]*Car)
-	p.cars = make([]Car, p.F)
-	for i := range p.cars {
-		p.cars[i].History = make([]int, 0, 10)
-		p.myCars[0] = append(p.myCars[0], &p.cars[i])
+	p.cars = make([]*CAR, p.F)
+	for cptCar := 0; cptCar < p.F; cptCar++ {
+		p.cars[cptCar] = &CAR{0, make([]RIDE, 0), 0, 0}
 	}
-
-	log.WithFields(logrus.Fields{
-		"function": "decode",
-	}).Info("parsing input")
 }
 
-func (p *UberGoogle) encode() string {
+func (p *UBERGOOGLE) encode() string {
 	var output string
+	totScore := 0
 	first := true
 	for _, c := range p.cars {
 		if !first {
@@ -90,20 +52,28 @@ func (p *UberGoogle) encode() string {
 			first = false
 		}
 		output += strconv.Itoa(len(c.History))
-		for _, rideID := range c.History {
-			output += " " + strconv.Itoa(rideID)
+		for _, ride := range c.History {
+			totScore += ride.Lenght()
+			if ride.tickStarted == ride.s {
+				totScore += p.B
+			}
+			output += " " + strconv.Itoa(ride.ID)
+
 		}
 	}
+	//fmt.Println(output)
+	fmt.Println(totScore)
+	/*for _, ride := range p.rides {
+	  fmt.Println(ride.Used)
+	}*/
 	return output
 }
 
-func (p *UberGoogle) write() {
+func (p *UBERGOOGLE) write() {
 	output := p.encode()
-	err := ioutil.WriteFile("output/"+fileName+".out", []byte(output), 0644)
+	err := ioutil.WriteFile(PATH + "output/"+fileName+".out", []byte(output), 0644)
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"function": "write",
-		}).Panic(err)
+		panic(err)
 	}
 }
 
@@ -114,10 +84,10 @@ func toSliceOfInt(line string) []int {
 	for i, v := range args {
 		rep[i], err = strconv.Atoi(v)
 		if err != nil {
-			log.WithFields(logrus.Fields{
-				"function": "toSliceOfInt",
-			}).Panic(err)
+			panic(err)
 		}
 	}
 	return rep
 }
+
+

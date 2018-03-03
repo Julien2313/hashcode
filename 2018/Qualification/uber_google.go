@@ -1,130 +1,130 @@
 package main
 
-import "github.com/sirupsen/logrus"
+import (
+	"fmt"
+	"sort"
+	"os"
+)
 
-type UberGoogle struct {
+type UBERGOOGLE struct {
 	R, C, F, N, B, T int
-	cars             []Car
-	rides            map[int]*ride
-	myCars           map[int][]*Car
+	cars             []*CAR
+	rides            []*RIDE
 }
 
-type Car struct {
-	N       int
-	History []int // ride IDs
-	x, y    int
-
-	currentScore float64
+type CAR struct {
+	nbrTickUsed  int
+	History       []RIDE
+	x, y          int
 }
 
-type ride struct {
+type RIDES []*RIDE
+type RIDE struct {
 	ID               int
-	a, b, x, y, s, f int
-
-	//timeToRide int
-
-	scoreN []float64
-	//nextRides []*decisionRide
+	x0, y0, x1, y1, s, f int
+	Score   float64
+	tickStarted int
 }
 
-type decisionRide struct {
-	t          int
-	score      float64
-	otherRides []*ride
-	ride       *ride
-}
-
-func (p *UberGoogle) moveAllCarsAtStep(step int) {
-	for index, car := range p.myCars[step] {
-		if len(p.rides) == 0 {
-			return
+func (ride *RIDE) markRide(tickStart int, bonus int) {
+	if ride.s > tickStart {
+		ride.Score = 0
+	} else {
+		ride.Score = float64(ride.Lenght())
+		if ride.s == tickStart {
+			ride.Score += float64(bonus)
 		}
-		for i, ride := range p.rides {
-
-			if ride.s > step+abs(ride.a-car.x)+abs(ride.b-car.y)+1000 {
-				break
-			}
-			longueurRide := abs(ride.a-ride.x) + abs(ride.b-ride.y)
-			bonus := 0
-			if max(ride.a+ride.b, ride.s) == ride.s {
-				bonus = p.B
-			}
-			if longueurRide+max(ride.a+ride.b, ride.s) < ride.f {
-				p.rides[i].scoreN[0] = float64(longueurRide+bonus) / float64(1+max(ride.a+ride.b, ride.s))
-			} else {
-				continue
-			}
-			p.rides[i].scoreN[1] = 0
-			for _, ride1 := range p.rides {
-				//ride1.scoreN[1] = ride1.scoreN[0]
-				bonus := 0
-				timeToReachStart := abs(ride1.a-car.x) + abs(ride1.b-car.y)
-				if max(timeToReachStart, ride1.s) == ride1.s {
-					bonus = p.B
-				}
-
-				longueurRide := abs(ride1.a-ride1.x) + abs(ride1.b-ride1.y)
-
-				if longueurRide+max(timeToReachStart, ride1.s) < ride1.f {
-					p.rides[i].scoreN[1] += float64(longueurRide+bonus) / float64(1+max(timeToReachStart, ride1.s))
-				}
-			}
-			p.rides[i].scoreN[1] = p.rides[i].scoreN[1]/float64(len(p.rides)) + p.rides[i].scoreN[0]
-		}
-
-		// prendre le ride le plus avantageux
-		log.WithFields(logrus.Fields{
-			"index":           index,
-			"remaining rides": len(p.rides),
-		}).Debug("picking the best ride")
-		max := 0.0
-		indexMax := -1
-		for i, ride := range p.rides {
-			if indexMax == -1 || ride.scoreN[1] > max {
-				max = ride.scoreN[1]
-				indexMax = i
-			}
-		}
-		car.currentScore += max
-		//for currentRide := p.rides[0];;{
-		//
-		//}
-		rideIndex := indexMax      // l'ID du ride
-		ride := p.rides[rideIndex] // ide
-		car.History = append(car.History, ride.ID)
-		// calculer le nouveau N
-		timeToReachStart := abs(ride.a-car.x) + abs(ride.b-car.y)
-		timeToRide := abs(ride.a-ride.x) + abs(ride.b-ride.y)
-
-		newN := car.N + timeToReachStart + timeToRide
-		log.WithFields(logrus.Fields{
-			"timeToReachStart": timeToReachStart,
-			"timeToRide":       timeToRide,
-		}).Debug("calculating new N")
-
-		// enlever le ride effectué
-		delete(p.rides, rideIndex)
-		log.WithFields(logrus.Fields{
-			"ride": rideIndex,
-		}).Debug("deleting ride")
-
-		// permuter la Car vers son nouvel emplacement N
-		log.WithFields(logrus.Fields{
-			"New N": newN,
-		}).Debug("update myCars map")
-		car.N = newN
-		p.myCars[newN] = append(p.myCars[newN], car)
-		p.myCars[step][index] = nil
+	}
+	if ride.Score < 0 {
+		fmt.Println("mark < 0")
+		os.Exit(1)
 	}
 }
 
-//pickARide := rand.Int() % len(p.rides)
-//i := 0
-//for rideIndex := range p.rides {
-//	if i == pickARide {
-//		pickARide = rideIndex
-//	}
-//	i++
-//}
-//ride := p.rides[pickARide]
-//car.History = append(car.History, ride.ID)
+func (ride *RIDE) Lenght() int {
+	return abs(ride.x1 - ride.x0) + abs(ride.y1 - ride.y0)
+}
+
+func (pCar *CAR) Distance(ride *RIDE) int {
+	return abs(pCar.x - ride.x0) + abs(pCar.y - ride.y0)
+}
+
+func (pCar *CAR) AddRide(ride *RIDE, tick int) {
+	ride.tickStarted = tick
+	pCar.History = append(pCar.History, *ride)
+
+	pCar.x, pCar.y = ride.x1, ride.y1
+	pCar.nbrTickUsed = pCar.Distance(ride) + ride.Lenght()
+	if pCar.nbrTickUsed < 0 {
+		fmt.Println("nbrTickUsed < 0")
+		os.Exit(1)
+	}
+}
+
+func (pCar *CAR) ChooseRide(p *UBERGOOGLE, tick int, bonus int) bool{
+	for _, ride := range p.rides {
+		ride.markRide(tick + pCar.Distance(ride), bonus)
+	}
+
+	sort.Sort(RIDES(p.rides))
+
+	if len(p.rides) == 0 {
+		return false
+	}
+
+	if p.rides[0].Score == -1 {
+		return false
+	}
+
+	if p.rides[0].Score != 0 {
+		pCar.AddRide(p.rides[0], tick)
+		p.rides = append(p.rides[:0], p.rides[0+1:]...)
+	}
+	return true
+}
+
+func (p *UBERGOOGLE) moveAllCarsAtStep(tick int) int {
+
+	for numRide := len(p.rides) - 1; numRide >= 0; numRide--{
+		if tick > p.rides[numRide].f {
+			p.rides = append(p.rides[:numRide], p.rides[numRide+1:]...)
+		}
+	}
+
+	for _, car := range p.cars {
+		if car.nbrTickUsed > 0 {
+			break
+		}
+		if !car.ChooseRide(p, tick, p.B) {
+			break
+		}
+	}
+
+	sort.Sort(p)
+	toMinus := 0
+
+	for _, car := range p.cars {
+		if car.nbrTickUsed == 0 { continue}
+		if toMinus == 0         { toMinus = car.nbrTickUsed ; car.nbrTickUsed = 0
+		} else                  { car.nbrTickUsed -= toMinus }
+	}
+
+	if toMinus == 0 {
+		if len(p.rides) == 0 {
+			return p.T
+		} else {
+			toMinus = 1
+		}
+	}
+	tick += toMinus
+	return tick
+}
+
+
+func (p RIDES) Len() int                  { return len(p) }
+func (p RIDES) Swap(i, j int)             { p[i], p[j] = p[j], p[i] }
+func (p RIDES) Less(i, j int) bool        { return p[i].Score > p[j].Score }
+
+func (p *UBERGOOGLE) Len() int            { return len(p.cars) }
+func (p *UBERGOOGLE) Swap(i, j int)       { p.cars[i], p.cars[j] = p.cars[j], p.cars[i] }
+func (p *UBERGOOGLE) Less(i, j int) bool  { return p.cars[i].nbrTickUsed < p.cars[j].nbrTickUsed }
