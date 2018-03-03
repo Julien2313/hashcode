@@ -26,18 +26,16 @@ type RIDE struct {
 	tickStarted int
 }
 
-func (ride *RIDE) markRide(tickStart int, bonus int) {
-	if ride.s > tickStart {
-		ride.Score = 0
-	} else {
-		ride.Score = float64(ride.Lenght())
-		if ride.s == tickStart {
-			ride.Score += float64(bonus)
-		}
+func (ride *RIDE) markRide(tickStart int, bonus int, distance int) {
+
+	ride.Score = float64(ride.Lenght())
+	if ride.s >= tickStart {
+		ride.Score += float64(bonus)
 	}
-	if ride.Score < 0 {
-		fmt.Println("mark < 0")
-		os.Exit(1)
+	//ride.Score -= float64(ride.f)
+	ride.Score -= float64(tickStart - distance)
+	if tickStart + ride.Lenght() > ride.f {
+		ride.Score = -9999999
 	}
 }
 
@@ -63,16 +61,12 @@ func (pCar *CAR) AddRide(ride *RIDE, tick int) {
 
 func (pCar *CAR) ChooseRide(p *UBERGOOGLE, tick int, bonus int) bool{
 	for _, ride := range p.rides {
-		ride.markRide(tick + pCar.Distance(ride), bonus)
+		ride.markRide(tick + pCar.Distance(ride), bonus, pCar.Distance(ride))
 	}
 
 	sort.Sort(RIDES(p.rides))
 
 	if len(p.rides) == 0 {
-		return false
-	}
-
-	if p.rides[0].Score == -1 {
 		return false
 	}
 

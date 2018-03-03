@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	fileName = "a_example"
+	//fileName = "a_example"
 	//fileName = "b_should_be_easy"
 	//fileName = "c_no_hurry"
-	//fileName = "d_metropolis"
+	fileName = "d_metropolis"
 	//fileName = "e_high_bonus"
 
 )
@@ -23,6 +23,9 @@ func main() {
 	for step := 0; step < myS.T; {
 		fmt.Println(step, "/", myS.T, " : ", len(myS.rides))
 		step = myS.moveAllCarsAtStep(step)
+		if len(myS.rides) == 0{
+			break
+		}
 	}
 	myS.write()
 }

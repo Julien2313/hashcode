@@ -44,6 +44,8 @@ func (p *UBERGOOGLE) decode(b []byte) {
 func (p *UBERGOOGLE) encode() string {
 	var output string
 	totScore := 0
+	cptTookButTooLate := 0
+	cptTookTot := 0
 	first := true
 	for _, c := range p.cars {
 		if !first {
@@ -53,9 +55,13 @@ func (p *UBERGOOGLE) encode() string {
 		}
 		output += strconv.Itoa(len(c.History))
 		for _, ride := range c.History {
+			cptTookTot++
 			totScore += ride.Lenght()
-			if ride.tickStarted == ride.s {
+			if ride.tickStarted <= ride.s {
 				totScore += p.B
+			}
+			if ride.tickStarted + ride.Lenght() > ride.f {
+				cptTookButTooLate++
 			}
 			output += " " + strconv.Itoa(ride.ID)
 
@@ -63,6 +69,8 @@ func (p *UBERGOOGLE) encode() string {
 	}
 	//fmt.Println(output)
 	fmt.Println(totScore)
+	fmt.Println(cptTookButTooLate)
+	fmt.Println(cptTookTot)
 	/*for _, ride := range p.rides {
 	  fmt.Println(ride.Used)
 	}*/
