@@ -6,9 +6,9 @@ import (
 
 const (
 	//fileName = "a_example"
-	//fileName = "b_should_be_easy"
+	fileName = "b_should_be_easy"
 	//fileName = "c_no_hurry"
-	fileName = "d_metropolis"
+	//fileName = "d_metropolis"
 	//fileName = "e_high_bonus"
 
 )
