@@ -18,6 +18,7 @@ type UBERGOOGLE struct {
 }
 
 type CAR struct {
+	ID int
 	nbrTickUsed  int
 	History       []RIDE
 	x, y          int
@@ -49,8 +50,8 @@ func (ride *RIDE) FindClosestRideNearEnd(rides []*RIDE, p *UBERGOOGLE, tickStart
 			cptRides--
 			continue
 		}
-		dist := int(p.Distances[ride.ID][rides[randRide].ID])
-		//dist = ride.DistanceEndToStart(rides[randRide])
+		//dist := int(p.Distances[ride.ID][rides[randRide].ID])
+		dist := ride.DistanceEndToStart(rides[randRide])
 		if (tickStart + dist) + rides[randRide].lenght > rides[randRide].finish {
 			continue
 		}
@@ -63,6 +64,26 @@ func (ride *RIDE) FindClosestRideNearEnd(rides []*RIDE, p *UBERGOOGLE, tickStart
 	}
 
 	return closest
+}
+
+func (car *CAR) verifyHistory() bool {
+	car_ := CAR{}
+	car_.x, car_.y = 0, 0
+	tick := 0
+	for cptRide, ride := range car.History {
+
+		tick += car_.Distance(&ride)
+		tick += max(0, ride.start - tick)
+		tick += ride.lenght
+
+		if tick > ride.finish {
+			fmt.Println(car.History[cptRide-2].ID, car.History[cptRide-1].ID, ride.ID)
+			fmt.Println()
+			return false
+		}
+		car_.x, car_.y = ride.x1, ride.y1
+	}
+	return true
 }
 
 func (thisRide *RIDE) ComputeAverageDistance(rides []*RIDE, p *UBERGOOGLE) {
@@ -80,15 +101,13 @@ func (thisRide *RIDE) ComputeAverageDistance(rides []*RIDE, p *UBERGOOGLE) {
 			cptRides--
 			continue
 		}
+		/*if p.Distances[thisRide.ID][rides[randRide].ID] == 0 {
+		  p.Distances[thisRide.ID][rides[randRide].ID] = int32(thisRide.DistanceEndToStart(rides[randRide]))
+		}
+		averageDistances += p.Distances[thisRide.ID][rides[randRide].ID]*/
 
-		//if p.Distances[thisRide.ID][rides[randRide].ID] == 0 {
-		//  p.Distances[thisRide.ID][rides[randRide].ID] = int32(thisRide.DistanceEndToStart(rides[randRide]))
-		//}
-		averageDistances += p.Distances[thisRide.ID][rides[randRide].ID]
-
-		//averageDistances += thisRide.DistanceEndToStart(rides[randRide])
+		averageDistances += thisRide.DistanceEndToStart(rides[randRide])
 	}
-
 	thisRide.averageDistances = averageDistances / nbrMaxRides
 }
 
@@ -181,7 +200,7 @@ func (pCar *CAR) ChooseRide(p *UBERGOOGLE, currentTick int) bool{
 	return true
 }
 
-func (p *UBERGOOGLE) RemoveDistancesOfRide (numRide int) {
+func (p *UBERGOOGLE) RemoveDistancesOfRide(numRide int) {
 	delete(p.Distances, numRide)
 	/*for cptRides := 0; cptRides < p.N; cptRides++ {
 	  delete(p.Distances[cptRides], numRide)
@@ -199,8 +218,8 @@ func (p *UBERGOOGLE) moveAllCarsAtTick(currentTick int) int {
 	}
 
 	for _, car := range p.cars {
-		if car.nbrTickUsed > 0 				{ break }
-		if car.done            				{ continue }
+		if car.nbrTickUsed > 0 				      { break }
+		if car.done            				      { continue }
 		if !car.ChooseRide(p, currentTick) 	{ break }
 	}
 
